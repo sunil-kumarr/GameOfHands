@@ -11,6 +11,7 @@ import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.drawable.BitmapDrawable;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.MediaStore;
@@ -26,11 +27,13 @@ import java.util.ArrayList;
 
 public class MainActivity extends AppCompatActivity {
 
+    private static final String TAG = "MainActivity";
     private static final int SELECT_IMAGE_FROM_GALLERY_CODE = 123;
 
     private MaterialButton mSelectImageBtn;
     private ImageView mDisplayImageView;
     private MaterialTextView mShowClassificationText;
+    private HandShapeDetector mHandShapeDetector;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -40,6 +43,7 @@ public class MainActivity extends AppCompatActivity {
         mSelectImageBtn = findViewById(R.id.select_img_btn);
         mDisplayImageView = findViewById(R.id.selected_image);
         mShowClassificationText = findViewById(R.id.text_view_prediction_label);
+        mHandShapeDetector = new HandShapeDetector(this);
 
         mSelectImageBtn.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -47,6 +51,7 @@ public class MainActivity extends AppCompatActivity {
                 askForStoragePermission();
             }
         });
+
     }
 
     private void askForStoragePermission() {
@@ -63,7 +68,7 @@ public class MainActivity extends AppCompatActivity {
 
     private void pickImageFromGallary() {
         Intent pickPhoto = new Intent(Intent.ACTION_PICK, android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
-        startActivityForResult(pickPhoto , SELECT_IMAGE_FROM_GALLERY_CODE);
+        startActivityForResult(pickPhoto, SELECT_IMAGE_FROM_GALLERY_CODE);
     }
 
     @Override
@@ -82,7 +87,7 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-        if (resultCode == RESULT_OK && requestCode == SELECT_IMAGE_FROM_GALLERY_CODE && data!=null) {
+        if (resultCode == RESULT_OK && requestCode == SELECT_IMAGE_FROM_GALLERY_CODE && data != null) {
 
             try {
                 Uri selectedImage = data.getData();
@@ -96,14 +101,26 @@ public class MainActivity extends AppCompatActivity {
                 c.close();
                 Bitmap thumbnail = (BitmapFactory.decodeFile(picturePath));
                 Log.d("ImagePath: ", picturePath + "");
-                mDisplayImageView.setImageBitmap(thumbnail);
-            }catch (Exception exception){
+               detectImage(thumbnail);
+            } catch (Exception exception) {
                 Toast.makeText(this, exception.getMessage(), Toast.LENGTH_SHORT).show();
             }
 
-        }else{
+        } else {
             Toast.makeText(this, "Error!!", Toast.LENGTH_SHORT).show();
         }
+    }
+
+    private void detectImage(Bitmap pBitmap) {
+        if(pBitmap==null){
+            Toast.makeText(this, "Error!!", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        Bitmap scaledBitmap = Bitmap.createScaledBitmap(pBitmap,
+                300, 300, false);
+        mDisplayImageView.setImageBitmap(scaledBitmap);
+        Log.d(TAG,""+pBitmap.getWidth()+" "+pBitmap.getHeight());
+       Log.d(TAG, " "+mHandShapeDetector.classify(pBitmap));
     }
 }
 
