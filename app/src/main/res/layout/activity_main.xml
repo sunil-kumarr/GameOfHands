@@ -55,12 +55,14 @@
     <com.google.android.material.button.MaterialButton
         android:id="@+id/select_img_btn"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="50dp"
         android:layout_margin="20dp"
+        android:textSize="16sp"
         android:background="@color/orange"
         android:text="@string/selectImage"
         android:textColor="@color/white"
-        app:cornerRadius="10dp"
+        android:padding="5dp"
+        app:cornerRadius="5dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent" />
