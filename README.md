@@ -11,3 +11,8 @@
 <img src="https://github.com/sunil-kumarr/GameOfHands/blob/master/app/src/main/res/drawable/rock.jpg" width="100"> | <img src="https://github.com/sunil-kumarr/GameOfHands/blob/master/app/src/main/res/drawable/paper.jpg" width="100">|<img src="https://github.com/sunil-kumarr/GameOfHands/blob/master/app/src/main/res/drawable/scissor.jpg" width="100"> 
 
 ### Application Layout Screenshot: 
+
+<img src="https://github.com/sunil-kumarr/GameOfHands/blob/master/screenshots/homescreen" width="100">
+<img src="https://github.com/sunil-kumarr/GameOfHands/blob/master/screenshots/rockscreen" width="100">
+<img src="https://github.com/sunil-kumarr/GameOfHands/blob/master/screenshots/paperscreen" width="100">
+<img src="https://github.com/sunil-kumarr/GameOfHands/blob/master/screenshots/scissorscreen" width="100">
