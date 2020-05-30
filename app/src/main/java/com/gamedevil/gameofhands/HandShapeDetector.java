@@ -5,8 +5,6 @@ import android.content.Context;
 import android.graphics.Bitmap;
 import android.util.Log;
 
-import androidx.core.app.ActivityCompat;
-
 import org.tensorflow.lite.DataType;
 import org.tensorflow.lite.Interpreter;
 import org.tensorflow.lite.support.common.FileUtil;
@@ -19,7 +17,6 @@ import org.tensorflow.lite.support.tensorbuffer.TensorBuffer;
 
 import java.io.IOException;
 import java.nio.MappedByteBuffer;
-import java.util.Arrays;
 import java.util.List;
 
 class HandShapeDetector {
@@ -27,6 +24,12 @@ class HandShapeDetector {
     private static final String TAG = "HandShapeDetector";
 
     private static final String MODEL_FILE_PATH = "rock_paper_sci_model.tflite";
+    private static final String ASSOCIATED_AXIS_LABELS = "rps_labels.tsv";
+    private static final String ASSOCIATED_VECTOR_PATH = "rps_vecs.tsv";
+    private static final String UNKNOWN_OUTPUT = "-1";
+    private static final int NORMALIZATION_VALUE = 255;
+    private static final int CROP_SIZE = 300;
+    private static final int[] OUTPUT_BUFFER_SHAPE = new int[]{1, 16};
 
     private TensorBuffer mOutputBuffer;
     private Interpreter mTensorFLite;
@@ -34,32 +37,22 @@ class HandShapeDetector {
 
     HandShapeDetector(Activity pActivity) {
         mContext = pActivity;
-        Log.d(TAG, "Model Detector constructor");
-        mOutputBuffer = TensorBuffer.createFixedSize(new int[]{1, 16}, DataType.FLOAT32);
+        mOutputBuffer = TensorBuffer.createFixedSize(OUTPUT_BUFFER_SHAPE, DataType.FLOAT32);
         try {
             MappedByteBuffer handShapeModel = FileUtil.loadMappedFile(pActivity, MODEL_FILE_PATH);
             mTensorFLite = new Interpreter(handShapeModel);
-            Log.d(TAG, "Created Image Classifier.");
         } catch (IOException e) {
             Log.e(TAG, "Error reading model", e);
         }
     }
 
     String classify(Bitmap pBitmap) {
-        if (pBitmap == null) {
-            Log.d(TAG,"Bitmap error! code : -100");
-            return "-1";
+        if (pBitmap == null || mTensorFLite == null) {
+            return UNKNOWN_OUTPUT;
         }
-        if (mTensorFLite == null) {
-            Log.e(TAG, "Image classifier has not been initialized; Skipped. code: -200");
-            return "-1";
-        }
-        TensorImage tensorImage = preprocessImage(pBitmap);
+        TensorImage tensorImage = preProcessingImage(pBitmap);
         runInference(tensorImage);
-        Log.d(TAG, "classify: " + Arrays.toString(mOutputBuffer.getFloatArray()));
-        String label = postprocessImage();
-        Log.d(TAG, "classify: " + label);
-        return label;
+        return postProcessingImage();
     }
 
     private void runInference(TensorImage pTensorImage) {
@@ -69,68 +62,71 @@ class HandShapeDetector {
         }
     }
 
-    private TensorImage preprocessImage(Bitmap pBitmap) {
+    private TensorImage preProcessingImage(Bitmap pBitmap) {
         int width = pBitmap.getWidth();
         int height = pBitmap.getHeight();
         int size = height > width ? width : height;
 
-        // output = (input-mean)/stddev
         ImageProcessor imageProcessor = new ImageProcessor.Builder()
                 .add(new ResizeWithCropOrPadOp(size, size))
-                .add(new ResizeOp(300, 300, ResizeOp.ResizeMethod.BILINEAR))
-                .add(new NormalizeOp(0, 255)) // output = (input-mean)/stddev
+                .add(new ResizeOp(CROP_SIZE, CROP_SIZE, ResizeOp.ResizeMethod.BILINEAR))
+                .add(new NormalizeOp(0, NORMALIZATION_VALUE)) // output = (input-mean)/stddev
                 .build();
 
         TensorImage tensorImage = new TensorImage(DataType.FLOAT32);
         tensorImage.load(pBitmap);
         tensorImage = imageProcessor.process(tensorImage);
-        Log.d(TAG,"Image Preprocessor complete");
         return tensorImage;
     }
 
-    List<String> getLoadedLabels(){
-        final String ASSOCIATED_AXIS_LABELS = "rps_labels.tsv";
+    private List<String> getLoadedLabels() {
         List<String> associatedAxisLabels = null;
-
         try {
             associatedAxisLabels = FileUtil.loadLabels(mContext, ASSOCIATED_AXIS_LABELS);
-//            Log.d(TAG, "getLoadedLabels: "+associatedAxisLabels);
         } catch (IOException e) {
-            Log.e("tfliteSupport", "Error reading label file", e);
+            Log.e("getLoadedLabels: ", "Error reading label file", e);
         }
         return associatedAxisLabels;
     }
 
-    private String postprocessImage(){
+    private String postProcessingImage() {
         List<String> labels = getLoadedLabels();
-        List<float[]> vectors;
-        String imageLabel = "-1";
-        try {
-            vectors = FileUtilTSV.loadVectorTSV(mContext,"rps_vecs.tsv");
-            float[] outputVector = mOutputBuffer.getFloatArray();
-            int index=0;
-            double minDistance= Double.MAX_VALUE;
-            for(int i=0;i<31;i++){
-                double distance = findEuclidianDistance(vectors.get(i),outputVector);
-                if(distance<minDistance){
-                    index = i;
-                    minDistance = distance;
-                }
-            }
-            imageLabel = labels.get(index);
-        } catch (IOException pE) {
-            pE.printStackTrace();
+        List<float[]> vectors = getVectors();
+        float[] outputVector = mOutputBuffer.getFloatArray();
+        if (vectors != null) {
+            return labels.get(findMinDistanceIndex(vectors, outputVector));
         }
-        return imageLabel;
+        return UNKNOWN_OUTPUT;
     }
 
-    private double findEuclidianDistance(float[] vector,float[] outputVector){
-        double sum = 0;
-        for(int i=0;i<16;i++){
-            double diff = vector[i]-outputVector[i];
-            sum+= Math.pow(diff,2.0);
+    private List<float[]> getVectors() {
+        try {
+            return FileUtilTSV.loadVectorTSV(mContext, ASSOCIATED_VECTOR_PATH);
+        } catch (IOException pEx) {
+            pEx.printStackTrace();
         }
-        return Math.sqrt(sum);
+        return null;
+    }
+
+    private int findMinDistanceIndex(List<float[]> pVectors, float[] pOutputVector) {
+        int index = 0;
+        double minDistance = Double.MAX_VALUE;
+        for (int i = 0; i < pVectors.size(); i++) {
+            double distance = findEuclideanDistance(pVectors.get(i), pOutputVector);
+            if (distance < minDistance) {
+                index = i;
+                minDistance = distance;
+            }
+        }
+        return index;
+    }
+
+    private double findEuclideanDistance(float[] vector, float[] outputVector) {
+        double sum = 0;
+        for (int i = 0; i < vector.length; i++) {
+            sum += Math.pow(vector[i] - outputVector[i], 2.0);
+        }
+        return sum;
     }
 
 }

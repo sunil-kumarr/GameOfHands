@@ -1,9 +1,5 @@
 package com.gamedevil.gameofhands;
 
-import androidx.annotation.NonNull;
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.app.ActivityCompat;
-
 import android.Manifest;
 import android.content.Intent;
 import android.content.pm.PackageManager;
@@ -18,6 +14,10 @@ import android.view.View;
 import android.widget.ImageView;
 import android.widget.Toast;
 
+import androidx.annotation.NonNull;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
+
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.textview.MaterialTextView;
 
@@ -25,6 +25,7 @@ public class SingleImageClassifier extends AppCompatActivity {
 
     private static final String TAG = "SingleImageClassifier";
     private static final int SELECT_IMAGE_FROM_GALLERY_CODE = 123;
+    private static final int CROP_SIZE = 300;
 
     private MaterialButton mSelectImageBtn;
     private ImageView mDisplayImageView;
@@ -58,28 +59,26 @@ public class SingleImageClassifier extends AppCompatActivity {
             if (ActivityCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
                 ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.READ_EXTERNAL_STORAGE}, SELECT_IMAGE_FROM_GALLERY_CODE);
             } else {
-                pickImageFromGallary();
+                pickImageFromGallery();
             }
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
 
-    private void pickImageFromGallary() {
+    private void pickImageFromGallery() {
         Intent pickPhoto = new Intent(Intent.ACTION_PICK, android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
         startActivityForResult(pickPhoto, SELECT_IMAGE_FROM_GALLERY_CODE);
     }
 
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
-        switch (requestCode) {
-            case SELECT_IMAGE_FROM_GALLERY_CODE:
-                if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                    pickImageFromGallary();
-                } else {
-                    Toast.makeText(this, "No Permissions granted!!\nRequired for app usage", Toast.LENGTH_SHORT).show();
-                }
-                break;
+        if (requestCode == SELECT_IMAGE_FROM_GALLERY_CODE) {
+            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                pickImageFromGallery();
+            } else {
+                Toast.makeText(this, "No Permissions granted!!\nRequired for app usage", Toast.LENGTH_SHORT).show();
+            }
         }
     }
 
@@ -115,11 +114,9 @@ public class SingleImageClassifier extends AppCompatActivity {
             Toast.makeText(this, "Error!!", Toast.LENGTH_SHORT).show();
             return;
         }
-        Bitmap scaledBitmap = Bitmap.createScaledBitmap(pBitmap,
-                300, 300, false);
+        Bitmap scaledBitmap = Bitmap.createScaledBitmap(pBitmap, CROP_SIZE, CROP_SIZE, false);
         mDisplayImageView.setImageBitmap(scaledBitmap);
         String label = mHandShapeDetector.classify(pBitmap);
-        Log.d(TAG, "detectImage: "+label);
         String handShape;
         switch (label) {
             case "0":

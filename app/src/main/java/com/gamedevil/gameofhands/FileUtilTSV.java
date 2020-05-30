@@ -4,7 +4,6 @@ import android.content.Context;
 
 import androidx.annotation.NonNull;
 
-import org.tensorflow.lite.DataType;
 import org.tensorflow.lite.support.common.SupportPreconditions;
 
 import java.io.BufferedReader;
@@ -15,12 +14,12 @@ import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.List;
 
-public class FileUtilTSV {
+class FileUtilTSV {
     private FileUtilTSV() {
     }
 
     @NonNull
-    public static List<float[]> loadVectorTSV(@NonNull Context context, @NonNull String filePath) throws IOException {
+    static List<float[]> loadVectorTSV(@NonNull Context context, @NonNull String filePath) throws IOException {
         return loadVectorTSV(context, filePath, Charset.defaultCharset());
     }
 
@@ -34,7 +33,7 @@ public class FileUtilTSV {
     }
 
     @NonNull
-    public static List<float[]> loadVectorTSV(@NonNull InputStream inputStream, Charset cs)
+    private static List<float[]> loadVectorTSV(@NonNull InputStream inputStream, Charset cs)
             throws IOException {
         List<float[]> vectors = new ArrayList<>();
         try (BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream, cs))) {
@@ -42,8 +41,8 @@ public class FileUtilTSV {
             while ((line = reader.readLine()) != null) {
                 if (line.trim().length() > 0) {
                     String[] lineItems = line.split("\t");
-                    float[] vectorValues = new float[16];
-                    for (int i = 0; i < 16; i++) {
+                    float[] vectorValues = new float[lineItems.length];
+                    for (int i = 0; i < lineItems.length; i++) {
                         vectorValues[i] = Float.parseFloat(lineItems[i]);
                     }
                     vectors.add(vectorValues);
