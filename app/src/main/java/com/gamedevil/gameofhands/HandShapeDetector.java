@@ -28,16 +28,6 @@ class HandShapeDetector {
 
     private static final String MODEL_FILE_PATH = "rock_paper_sci_model.tflite";
 
-    // Specify the output size
-    private static final int NUMBER_LENGTH = 10;
-
-    // Specify the input size
-    private static final int DIM_BATCH_SIZE = 1;
-    private static final int DIM_IMG_SIZE_X = 300;
-    private static final int DIM_IMG_SIZE_Y = 300;
-    private static final int DIM_PIXEL_SIZE = 1;
-
-    private ImageProcessor mImageProcessor;
     private TensorBuffer mOutputBuffer;
     private Interpreter mTensorFLite;
     private Context mContext;
@@ -55,28 +45,21 @@ class HandShapeDetector {
         }
     }
 
-    int classify(Bitmap pBitmap) {
+    String classify(Bitmap pBitmap) {
         if (pBitmap == null) {
             Log.d(TAG,"Bitmap error! code : -100");
-            return -100;
+            return "-1";
         }
         if (mTensorFLite == null) {
             Log.e(TAG, "Image classifier has not been initialized; Skipped. code: -200");
-            return -200;
+            return "-1";
         }
         TensorImage tensorImage = preprocessImage(pBitmap);
         runInference(tensorImage);
         Log.d(TAG, "classify: " + Arrays.toString(mOutputBuffer.getFloatArray()));
-        getLoadedLabels();
-        try {
-            List<List<Float>> vectors = FileUtilTSV.loadVectorTSV(mContext,"rps_vecs.tsv");
-            for(List<Float> row : vectors){
-                Log.d(TAG, "classify: "+row);
-            }
-        } catch (IOException pE) {
-            pE.printStackTrace();
-        }
-        return 1;
+        String label = postprocessImage();
+        Log.d(TAG, "classify: " + label);
+        return label;
     }
 
     private void runInference(TensorImage pTensorImage) {
@@ -91,7 +74,8 @@ class HandShapeDetector {
         int height = pBitmap.getHeight();
         int size = height > width ? width : height;
 
-        mImageProcessor = new ImageProcessor.Builder()
+        // output = (input-mean)/stddev
+        ImageProcessor imageProcessor = new ImageProcessor.Builder()
                 .add(new ResizeWithCropOrPadOp(size, size))
                 .add(new ResizeOp(300, 300, ResizeOp.ResizeMethod.BILINEAR))
                 .add(new NormalizeOp(0, 255)) // output = (input-mean)/stddev
@@ -99,7 +83,7 @@ class HandShapeDetector {
 
         TensorImage tensorImage = new TensorImage(DataType.FLOAT32);
         tensorImage.load(pBitmap);
-        tensorImage = mImageProcessor.process(tensorImage);
+        tensorImage = imageProcessor.process(tensorImage);
         Log.d(TAG,"Image Preprocessor complete");
         return tensorImage;
     }
@@ -110,11 +94,43 @@ class HandShapeDetector {
 
         try {
             associatedAxisLabels = FileUtil.loadLabels(mContext, ASSOCIATED_AXIS_LABELS);
-            Log.d(TAG, "getLoadedLabels: "+associatedAxisLabels);
+//            Log.d(TAG, "getLoadedLabels: "+associatedAxisLabels);
         } catch (IOException e) {
             Log.e("tfliteSupport", "Error reading label file", e);
         }
         return associatedAxisLabels;
+    }
+
+    private String postprocessImage(){
+        List<String> labels = getLoadedLabels();
+        List<float[]> vectors;
+        String imageLabel = "-1";
+        try {
+            vectors = FileUtilTSV.loadVectorTSV(mContext,"rps_vecs.tsv");
+            float[] outputVector = mOutputBuffer.getFloatArray();
+            int index=0;
+            double minDistance= Double.MAX_VALUE;
+            for(int i=0;i<31;i++){
+                double distance = findEuclidianDistance(vectors.get(i),outputVector);
+                if(distance<minDistance){
+                    index = i;
+                    minDistance = distance;
+                }
+            }
+            imageLabel = labels.get(index);
+        } catch (IOException pE) {
+            pE.printStackTrace();
+        }
+        return imageLabel;
+    }
+
+    private double findEuclidianDistance(float[] vector,float[] outputVector){
+        double sum = 0;
+        for(int i=0;i<16;i++){
+            double diff = vector[i]-outputVector[i];
+            sum+= Math.pow(diff,2.0);
+        }
+        return Math.sqrt(sum);
     }
 
 }

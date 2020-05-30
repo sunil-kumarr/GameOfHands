@@ -20,12 +20,12 @@ public class FileUtilTSV {
     }
 
     @NonNull
-    public static List<List<Float>> loadVectorTSV(@NonNull Context context, @NonNull String filePath) throws IOException {
+    public static List<float[]> loadVectorTSV(@NonNull Context context, @NonNull String filePath) throws IOException {
         return loadVectorTSV(context, filePath, Charset.defaultCharset());
     }
 
     @NonNull
-    static List<List<Float>> loadVectorTSV(@NonNull Context context, @NonNull String filePath, Charset cs) throws IOException {
+    static List<float[]> loadVectorTSV(@NonNull Context context, @NonNull String filePath, Charset cs) throws IOException {
         SupportPreconditions.checkNotNull(context, "Context cannot be null.");
         SupportPreconditions.checkNotNull(filePath, "File path cannot be null.");
         try (InputStream inputStream = context.getAssets().open(filePath)) {
@@ -34,17 +34,17 @@ public class FileUtilTSV {
     }
 
     @NonNull
-    public static List<List<Float>> loadVectorTSV(@NonNull InputStream inputStream, Charset cs)
+    public static List<float[]> loadVectorTSV(@NonNull InputStream inputStream, Charset cs)
             throws IOException {
-        List<List<Float>> vectors = new ArrayList<>();
+        List<float[]> vectors = new ArrayList<>();
         try (BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream, cs))) {
             String line;
             while ((line = reader.readLine()) != null) {
                 if (line.trim().length() > 0) {
                     String[] lineItems = line.split("\t");
-                    List<Float> vectorValues = new ArrayList<>();
-                    for (String s : lineItems) {
-                        vectorValues.add(Float.parseFloat(s));
+                    float[] vectorValues = new float[16];
+                    for (int i = 0; i < 16; i++) {
+                        vectorValues[i] = Float.parseFloat(lineItems[i]);
                     }
                     vectors.add(vectorValues);
                 }

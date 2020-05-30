@@ -101,7 +101,7 @@ public class MainActivity extends AppCompatActivity {
                 c.close();
                 Bitmap thumbnail = (BitmapFactory.decodeFile(picturePath));
                 Log.d("ImagePath: ", picturePath + "");
-               detectImage(thumbnail);
+                detectImage(thumbnail);
             } catch (Exception exception) {
                 Toast.makeText(this, exception.getMessage(), Toast.LENGTH_SHORT).show();
             }
@@ -112,15 +112,30 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void detectImage(Bitmap pBitmap) {
-        if(pBitmap==null){
+        if (pBitmap == null) {
             Toast.makeText(this, "Error!!", Toast.LENGTH_SHORT).show();
             return;
         }
         Bitmap scaledBitmap = Bitmap.createScaledBitmap(pBitmap,
                 300, 300, false);
         mDisplayImageView.setImageBitmap(scaledBitmap);
-
-       Log.d(TAG, " "+mHandShapeDetector.classify(pBitmap));
+        String label = mHandShapeDetector.classify(pBitmap);
+        Log.d(TAG, "detectImage: "+label);
+        String handShape;
+        switch (label) {
+            case "0":
+                handShape = "Rock";
+                break;
+            case "1":
+                handShape = "Paper";
+                break;
+            case "2":
+                handShape = "Scissor";
+                break;
+            default:
+                handShape = "Unknown";
+        }
+        mShowClassificationText.setText(handShape);
     }
 }
 
