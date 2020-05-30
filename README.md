@@ -12,7 +12,7 @@
 
 ### Application Layout Screenshot: 
 
-<img src="https://github.com/sunil-kumarr/GameOfHands/blob/master/screenshots/homescreen" width="100">
-<img src="https://github.com/sunil-kumarr/GameOfHands/blob/master/screenshots/rockscreen" width="100">
-<img src="https://github.com/sunil-kumarr/GameOfHands/blob/master/screenshots/paperscreen" width="100">
-<img src="https://github.com/sunil-kumarr/GameOfHands/blob/master/screenshots/scissorscreen" width="100">
+.<img src="https://github.com/sunil-kumarr/GameOfHands/blob/master/screenshots/homescreen.jpg" width="200">
+.<img src="https://github.com/sunil-kumarr/GameOfHands/blob/master/screenshots/rockscreen.jpg" width="200">
+.<img src="https://github.com/sunil-kumarr/GameOfHands/blob/master/screenshots/paperscreen.jpg" width="200">
+.<img src="https://github.com/sunil-kumarr/GameOfHands/blob/master/screenshots/scissorscreen.jpg" width="200">
