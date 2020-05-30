@@ -1,4 +1,4 @@
 <resources>
     <string name="app_name">GameOfHands</string>
-    <string name="selectImage">Select Image for classification</string>
+    <string name="selectImage">Select Image</string>
 </resources>

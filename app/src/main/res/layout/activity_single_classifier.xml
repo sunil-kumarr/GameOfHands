@@ -11,10 +11,10 @@
         android:id="@+id/selected_image_container_card"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:minWidth="300dp"
-        android:minHeight="300dp"
         android:layout_margin="20dp"
         android:background="@color/white"
+        android:minWidth="300dp"
+        android:minHeight="300dp"
         app:cardBackgroundColor="@color/white"
         app:cardElevation="4dp"
         app:layout_constraintBottom_toTopOf="@id/select_img_btn"
@@ -24,9 +24,9 @@
 
         <FrameLayout
             android:layout_width="wrap_content"
-            android:minHeight="300dp"
+            android:layout_height="wrap_content"
             android:minWidth="300dp"
-            android:layout_height="wrap_content">
+            android:minHeight="300dp">
 
             <ImageView
                 android:id="@+id/selected_image"
@@ -39,18 +39,35 @@
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="parent" />
 
-            <com.google.android.material.textview.MaterialTextView
-                android:id="@+id/text_view_prediction_label"
+            <LinearLayout
                 android:layout_width="match_parent"
-                android:layout_height="50dp"
+                android:layout_height="wrap_content"
                 android:layout_gravity="bottom"
                 android:background="@color/white"
-                android:gravity="center"
-                android:text="No Image selected"
-                android:textAlignment="center"
-                android:textColor="@color/black"
-                android:textSize="25dp"
-                android:textStyle="bold" />
+                android:orientation="horizontal">
+
+                <ImageView
+                    android:id="@+id/classification_image"
+                    android:layout_width="50dp"
+                    android:layout_height="50dp"
+                    android:layout_gravity="center"
+                    android:background="@color/white"
+                    android:src="@drawable/ic_photo" />
+
+                <com.google.android.material.textview.MaterialTextView
+                    android:id="@+id/text_view_prediction_label"
+                    android:layout_width="match_parent"
+                    android:layout_height="50dp"
+                    android:layout_gravity="bottom"
+                    android:background="@color/white"
+                    android:gravity="center"
+                    android:text="No Image selected"
+                    android:textAlignment="center"
+                    android:textColor="@color/black"
+                    android:textSize="25dp"
+                    android:textStyle="bold" />
+            </LinearLayout>
+
         </FrameLayout>
 
     </androidx.cardview.widget.CardView>
@@ -60,12 +77,14 @@
         android:id="@+id/select_img_btn"
         android:layout_width="match_parent"
         android:layout_height="50dp"
-        android:layout_margin="20dp"
-        android:textSize="16sp"
+        android:layout_marginStart="50dp"
+        android:layout_marginBottom="50dp"
+        android:layout_marginEnd="50dp"
         android:background="@color/orange"
+        android:padding="5dp"
         android:text="@string/selectImage"
         android:textColor="@color/white"
-        android:padding="5dp"
+        android:textSize="16sp"
         app:cornerRadius="5dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"

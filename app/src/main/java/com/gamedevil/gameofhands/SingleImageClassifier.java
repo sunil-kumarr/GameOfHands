@@ -28,6 +28,7 @@ public class SingleImageClassifier extends AppCompatActivity {
 
     private MaterialButton mSelectImageBtn;
     private ImageView mDisplayImageView;
+    private ImageView mClassSymbol;
     private MaterialTextView mShowClassificationText;
     private HandShapeDetector mHandShapeDetector;
 
@@ -39,6 +40,8 @@ public class SingleImageClassifier extends AppCompatActivity {
         mSelectImageBtn = findViewById(R.id.select_img_btn);
         mDisplayImageView = findViewById(R.id.selected_image);
         mShowClassificationText = findViewById(R.id.text_view_prediction_label);
+        mClassSymbol = findViewById(R.id.classification_image);
+
         mHandShapeDetector = new HandShapeDetector(this);
 
         mSelectImageBtn.setOnClickListener(new View.OnClickListener() {
@@ -121,12 +124,15 @@ public class SingleImageClassifier extends AppCompatActivity {
         switch (label) {
             case "0":
                 handShape = "Rock";
+                mClassSymbol.setImageResource(R.drawable.rock);
                 break;
             case "1":
                 handShape = "Paper";
+                mClassSymbol.setImageResource(R.drawable.paper);
                 break;
             case "2":
                 handShape = "Scissor";
+                mClassSymbol.setImageResource(R.drawable.scissor);
                 break;
             default:
                 handShape = "Unknown";
