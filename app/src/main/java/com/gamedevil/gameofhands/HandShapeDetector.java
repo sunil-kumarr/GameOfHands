@@ -40,38 +40,40 @@ class HandShapeDetector {
     private Interpreter mTensorFLite;
 
     HandShapeDetector(Activity pActivity) {
-        Log.d(TAG,"Model Detector constructor");
+        Log.d(TAG, "Model Detector constructor");
         mOutputBuffer = TensorBuffer.createFixedSize(new int[]{1, 16}, DataType.FLOAT32);
         try {
             MappedByteBuffer handShapeModel = FileUtil.loadMappedFile(pActivity, MODEL_FILE_PATH);
             mTensorFLite = new Interpreter(handShapeModel);
+            Log.d(TAG, "Created Image Classifier.");
         } catch (IOException e) {
             Log.e(TAG, "Error reading model", e);
         }
     }
 
     int classify(Bitmap pBitmap) {
-        if (pBitmap == null) return -100;
+        if (pBitmap == null) {
+            Log.d(TAG,"Bitmap error! code : -100");
+            return -100;
+        }
         if (mTensorFLite == null) {
-            Log.e(TAG, "Image classifier has not been initialized; Skipped.");
+            Log.e(TAG, "Image classifier has not been initialized; Skipped. code: -200");
             return -200;
         }
-        preprocessImage(pBitmap);
-        TensorImage tensorImage = new TensorImage(DataType.FLOAT32);
-        tensorImage.load(pBitmap);
-        tensorImage = mImageProcessor.process(tensorImage);
+        TensorImage tensorImage = preprocessImage(pBitmap);
         runInference(tensorImage);
-        Log.d(TAG, "classify: "+ Arrays.toString(mOutputBuffer.getFloatArray()));
+        Log.d(TAG, "classify: " + Arrays.toString(mOutputBuffer.getFloatArray()));
         return 1;
     }
 
     private void runInference(TensorImage pTensorImage) {
         if (null != mTensorFLite) {
+            Log.d(TAG, "runInference: Started");
             mTensorFLite.run(pTensorImage.getBuffer(), mOutputBuffer.getBuffer());
         }
     }
 
-    private void preprocessImage(Bitmap pBitmap) {
+    private TensorImage preprocessImage(Bitmap pBitmap) {
         int width = pBitmap.getWidth();
         int height = pBitmap.getHeight();
         int size = height > width ? width : height;
@@ -79,9 +81,14 @@ class HandShapeDetector {
         mImageProcessor = new ImageProcessor.Builder()
                 .add(new ResizeWithCropOrPadOp(size, size))
                 .add(new ResizeOp(300, 300, ResizeOp.ResizeMethod.BILINEAR))
-                .add(new NormalizeOp(0, 255))
+                .add(new NormalizeOp(0, 255)) // output = (input-mean)/stddev
                 .build();
 
+        TensorImage tensorImage = new TensorImage(DataType.FLOAT32);
+        tensorImage.load(pBitmap);
+        tensorImage = mImageProcessor.process(tensorImage);
+        Log.d(TAG,"Image Preprocessor complete");
+        return tensorImage;
     }
 
 }

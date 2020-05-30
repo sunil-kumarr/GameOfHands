@@ -119,7 +119,7 @@ public class MainActivity extends AppCompatActivity {
         Bitmap scaledBitmap = Bitmap.createScaledBitmap(pBitmap,
                 300, 300, false);
         mDisplayImageView.setImageBitmap(scaledBitmap);
-        Log.d(TAG,""+pBitmap.getWidth()+" "+pBitmap.getHeight());
+
        Log.d(TAG, " "+mHandShapeDetector.classify(pBitmap));
     }
 }
