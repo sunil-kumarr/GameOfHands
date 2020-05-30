@@ -1,6 +1,7 @@
 package com.gamedevil.gameofhands;
 
 import android.app.Activity;
+import android.content.Context;
 import android.graphics.Bitmap;
 import android.util.Log;
 
@@ -19,6 +20,7 @@ import org.tensorflow.lite.support.tensorbuffer.TensorBuffer;
 import java.io.IOException;
 import java.nio.MappedByteBuffer;
 import java.util.Arrays;
+import java.util.List;
 
 class HandShapeDetector {
 
@@ -38,8 +40,10 @@ class HandShapeDetector {
     private ImageProcessor mImageProcessor;
     private TensorBuffer mOutputBuffer;
     private Interpreter mTensorFLite;
+    private Context mContext;
 
     HandShapeDetector(Activity pActivity) {
+        mContext = pActivity;
         Log.d(TAG, "Model Detector constructor");
         mOutputBuffer = TensorBuffer.createFixedSize(new int[]{1, 16}, DataType.FLOAT32);
         try {
@@ -63,6 +67,15 @@ class HandShapeDetector {
         TensorImage tensorImage = preprocessImage(pBitmap);
         runInference(tensorImage);
         Log.d(TAG, "classify: " + Arrays.toString(mOutputBuffer.getFloatArray()));
+        getLoadedLabels();
+        try {
+            List<List<Float>> vectors = FileUtilTSV.loadVectorTSV(mContext,"rps_vecs.tsv");
+            for(List<Float> row : vectors){
+                Log.d(TAG, "classify: "+row);
+            }
+        } catch (IOException pE) {
+            pE.printStackTrace();
+        }
         return 1;
     }
 
@@ -89,6 +102,19 @@ class HandShapeDetector {
         tensorImage = mImageProcessor.process(tensorImage);
         Log.d(TAG,"Image Preprocessor complete");
         return tensorImage;
+    }
+
+    List<String> getLoadedLabels(){
+        final String ASSOCIATED_AXIS_LABELS = "rps_labels.tsv";
+        List<String> associatedAxisLabels = null;
+
+        try {
+            associatedAxisLabels = FileUtil.loadLabels(mContext, ASSOCIATED_AXIS_LABELS);
+            Log.d(TAG, "getLoadedLabels: "+associatedAxisLabels);
+        } catch (IOException e) {
+            Log.e("tfliteSupport", "Error reading label file", e);
+        }
+        return associatedAxisLabels;
     }
 
 }
